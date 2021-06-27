@@ -2,15 +2,20 @@
 
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+import argparse
 
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+8 to toggle the breakpoint.
+# def parse_single_monster(url: str):
+#     print(parser.url_to_md(url))
+import parser
 
+if __name__ == "__main__":
+    argparser = argparse.ArgumentParser(description="PFRPG Utilities")
+    subparsers = argparser.add_subparsers()
+    monster_sub = subparsers.add_parser("monster", help="Monster utilities")
+    monster_sub.add_argument("url", type=str, help="URL to get monster from")
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+    args = vars(argparser.parse_args())
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    if 'url' in args:
+        [print(m) for m in parser.parse_monster(args['url'])]
