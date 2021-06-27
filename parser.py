@@ -34,6 +34,8 @@ def clean_elements(element: Element) -> Element:
     for span in element.find_all("span"):
         if span.string:
             span.replace_with(span.string)
+        elif span.text:
+            span.replace_with(span.text)
     return element
 
 
