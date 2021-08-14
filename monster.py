@@ -1,6 +1,31 @@
+from __future__ import annotations
 import json
 import math
-from collections import OrderedDict
+
+from parser import Element
+
+die_progression = [
+    "1",
+    "1d2",
+    "1d3",
+    "1d4",
+    "1d6",
+    "1d8",
+    "1d10",
+    "2d6",
+    "2d8",
+    "3d6",
+    "3d8",
+    "4d6",
+    "4d8",
+    "6d6",
+    "6d8",
+    "8d6",
+    "8d8",
+    "12d6",
+    "12d8",
+    "16d6"
+]
 
 
 def ability_bonus(score: int) -> int:
@@ -8,10 +33,9 @@ def ability_bonus(score: int) -> int:
 
 
 def increase_damage_die_step(die: str) -> str:
-    die_progression = OrderedDict(
-
-    )
-    pass
+    if die == die_progression[-1]:
+        return die
+    return die_progression[die_progression.index(die)+1]
 
 
 class Monster:
@@ -37,6 +61,10 @@ class Monster:
             self.strength += 4
             self.dexterity += -2
             self.constitution += 4
+
+    @classmethod
+    def new_from_bs(cls, page: Element) -> Monster:
+        pass
 
 
 def new_from_json(file: str) -> Monster:

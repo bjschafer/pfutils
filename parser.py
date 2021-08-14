@@ -1,4 +1,4 @@
-import sys
+import re
 from typing import Union, Generator
 
 import bs4.element
@@ -17,7 +17,7 @@ SKILLS = {"Acrobatics", "Appraise", "Bluff", "Climb", "Craft", "Diplomacy",
 ABILITIES = {"Charisma", "Constitution", "Dexterity", "Intelligence", "Strength", "Wisdom"}
 
 IGNORABLE_LINKS = {"low-light vision", "darkvision", "touch", "flat-footed", "concentration"
-                                                                             "dodge", "natural", "size", "HD",
+                   "dodge", "natural", "size", "HD", "Grapple"
                    "saving throw", "skill check",
                    "Will", "Fort", "Reflex"}
 IGNORABLE_LINKS.update(SKILLS)
@@ -43,21 +43,31 @@ def get_div(url: str) -> Element:
     page = requests.get(url)
     soup = BeautifulSoup(page.content, 'html.parser')
     div = soup.find("div", attrs={"class": "statblock"})
+    # div = soup.find("div", attrs={"class": "article-content"})
     del div['class']
     return div
 
 
-def url_to_md(url: str) -> str:
+def clean_url(url: str) -> str:
     div = get_div(url)
     if not div:
         return ""
     clean_div = clean_elements(div)
-    return pypandoc.convert_text(clean_div, "markdown_github", format="html").replace("<div>", "").replace("</div>", "")
+    return clean_div
 
 
-def parse_monster(url: str) -> Generator[str, None, None]:
+def url_to_md(url: str) -> str:
+    clean_div = clean_url(url)
+    converted = pypandoc.convert_text(clean_div, "gfm", format="html", extra_args=["--wrap=none"])
+    return re.sub(r"<\/?div.*>", "", converted)
+
+
+def parse_monster(url: str, no_convert: bool) -> Generator[str, None, None]:
     if 'monster-listings' in url:
-        yield url_to_md(url)
+        if no_convert:
+            yield clean_url(url)
+        else:
+            yield url_to_md(url)
     else:
         monster_list = BeautifulSoup(
             requests.get(url).content, 'html.parser')
@@ -71,4 +81,7 @@ def parse_monster(url: str) -> Generator[str, None, None]:
 
         monster_links = monster_list.find_all(is_monster_link)
         for url_obj in monster_links:
-            yield url_to_md(url_obj['href'])
+            if no_convert:
+                yield clean_url(url)
+            else:
+                yield url_to_md(url_obj['href'])
