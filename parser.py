@@ -1,5 +1,5 @@
 import re
-from typing import Union, Generator
+from typing import Tuple, Union, Generator
 
 import bs4.element
 import pypandoc
@@ -47,26 +47,38 @@ def get_div(url: str) -> Element:
     page = requests.get(url)
     soup = BeautifulSoup(page.content, 'html.parser')
     div = soup.find("div", attrs={"class": "statblock"})
+    if not div:
+        div = soup.find("div", attrs={"class": "article-content"})
     # div = soup.find("div", attrs={"class": "article-content"})
     del div['class']
     return div
 
+def get_monster_name(element: Element) -> str:
+    for para in element.find_all("p"):
+        if 'class' in para.attrs and 'title' in para.attrs['class']:
+            if para.string:
+                return para.string
+            elif para.text:
+                return para.text
+    return "UNKNOWN"
 
-def clean_url(url: str) -> str:
+
+def clean_url(url: str) -> Tuple[str, str]:
     div = get_div(url)
+    name = get_monster_name(div)
     if not div:
         return ""
     clean_div = clean_elements(div)
-    return clean_div
+    return clean_div, name
 
 
-def url_to_md(url: str) -> str:
-    clean_div = clean_url(url)
+def url_to_md(url: str) -> Tuple[str, str]:
+    clean_div, monster_name = clean_url(url)
     converted = pypandoc.convert_text(clean_div, "gfm", format="html", extra_args=["--wrap=none"])
-    return re.sub(r"<\/?div.*>", "", converted)
+    return re.sub(r"<\/?div.*>", "", converted), monster_name
 
 
-def parse_monster(url: str, no_convert: bool) -> Generator[str, None, None]:
+def parse_monster(url: str, no_convert: bool) -> Generator[Tuple[str, str], None, None]:
     if 'monster-listings' in url:
         if no_convert:
             yield clean_url(url)
