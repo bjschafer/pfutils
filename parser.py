@@ -31,11 +31,15 @@ def clean_elements(element: Element) -> Element:
             link.replace_with(link.string)
         if 'class' in link.attrs and 'spell' in link.attrs['class']:
             del link['class']
+        if 'name' in link.attrs:
+            link.replace_with(link.string if link.string else "")
     for span in element.find_all("span"):
         if span.string:
             span.replace_with(span.string)
         elif span.text:
             span.replace_with(span.text)
+        else:
+            span.replace_with("")
     return element
 
 
